@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "doc",
-    "slug": "doc",
-    "version": "1.0.0",
+    "name": "Document Scanner",
+    "slug": "document-scanner",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +13,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.bhaveshbishnoi.doc"
+      "bundleIdentifier": "com.bhaveshbishnoi.documentscanner"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +25,7 @@
         "CAMERA",
         "CAMERA"
       ],
+      "versionCode": 3,
       "package": "com.bhaveshbishnoi.doc"
     },
     "web": {

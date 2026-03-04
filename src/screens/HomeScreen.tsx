@@ -8,7 +8,9 @@ import {
     Image,
     Alert,
     ActivityIndicator,
-    TextInput
+    TextInput,
+    Platform,
+    PermissionsAndroid
 } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -58,6 +60,23 @@ const HomeScreen = () => {
 
     const handleScan = async () => {
         try {
+            if (Platform.OS === 'android') {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.CAMERA,
+                    {
+                        title: "Camera Permission",
+                        message: "App needs camera access to scan documents.",
+                        buttonNeutral: "Ask Me Later",
+                        buttonNegative: "Cancel",
+                        buttonPositive: "OK"
+                    }
+                );
+                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                    Alert.alert('Permission Denied', 'Camera permission is required to scan documents.');
+                    return;
+                }
+            }
+
             const { scannedImages } = await DocumentScanner.scanDocument({
                 maxNumDocuments: 50,
             });

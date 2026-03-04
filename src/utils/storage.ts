@@ -25,7 +25,10 @@ export interface Folder {
     isLocked?: boolean;
 }
 
-const getBaseDir = () => `${FileSystem.documentDirectory || FileSystem.cacheDirectory}${DOCUMENTS_FOLDER}/`;
+const getBaseDir = () => {
+    const base = FileSystem.documentDirectory || FileSystem.cacheDirectory || 'file:///data/user/0/com.bhaveshbishnoi.doc/files/';
+    return `${base}${DOCUMENTS_FOLDER}/`;
+};
 
 export const initStorage = async () => {
     const dir = getBaseDir();
