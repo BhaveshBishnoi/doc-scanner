@@ -1,17 +1,28 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
 import { Document } from './storage';
 
 export const exportToPdf = async (doc: Document) => {
     try {
+        const pagesHtml = await Promise.all(
+            doc.pages.map(async (page) => {
+                const base64 = await FileSystem.readAsStringAsync(page.uri, {
+                    encoding: FileSystem.EncodingType.Base64,
+                });
+                const imgSource = `data:image/jpeg;base64,${base64}`;
+                return `
+                    <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
+                    <img src="${imgSource}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+                    </div>
+                `;
+            })
+        );
+
         const htmlContent = `
       <html>
         <body style="margin: 0; padding: 0;">
-          ${doc.pages.map(page => `
-            <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
-              <img src="${page.uri}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
-            </div>
-          `).join('')}
+          ${pagesHtml.join('')}
         </body>
       </html>
     `;
