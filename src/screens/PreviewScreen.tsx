@@ -94,7 +94,7 @@ const PreviewScreen = () => {
             const result = await ImageManipulator.manipulateAsync(
                 pageToRotate.uri,
                 [{ rotate: 90 }],
-                { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+                { compress: 0.8, format: ImageManipulator.SaveFormat.JPEG }
             );
 
             const newUri = `${FileSystem.documentDirectory || FileSystem.cacheDirectory}rotated_${Date.now()}.jpg`;

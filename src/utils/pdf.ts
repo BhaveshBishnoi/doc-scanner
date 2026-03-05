@@ -17,36 +17,33 @@ export const exportToPdf = async (doc: Document) => {
           { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
         );
 
-        const base64 = await FileSystem.readAsStringAsync(manipResult.uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-
-        const imgSource = `data:image/jpeg;base64,${base64}`;
+        // Using file:// URI directly in HTML is much more memory efficient than Base64
         pagesHtml.push(`
-                    <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
-                    <img src="${imgSource}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
-                    </div>
-                `);
-
-        // Clean up the temporary compressed image
-        await FileSystem.deleteAsync(manipResult.uri, { idempotent: true });
+          <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; overflow: hidden;">
+            <img src="${manipResult.uri}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+          </div>
+        `);
       } catch (pageError) {
         console.warn('Failed to compress page, using original:', pageError);
         // Fallback to original image if manipulation fails
-        const base64 = await FileSystem.readAsStringAsync(page.uri, {
-          encoding: FileSystem.EncodingType.Base64,
-        });
-        const imgSource = `data:image/jpeg;base64,${base64}`;
         pagesHtml.push(`
-                    <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh;">
-                    <img src="${imgSource}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
-                    </div>
-                `);
+          <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; overflow: hidden;">
+            <img src="${page.uri}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+          </div>
+        `);
       }
     }
+
     const htmlContent = `
+      <!DOCTYPE html>
       <html>
-        <body style="margin: 0; padding: 0;">
+        <head>
+          <style>
+            @page { margin: 0; }
+            body { margin: 0; padding: 0; background-color: white; }
+          </style>
+        </head>
+        <body>
           ${pagesHtml.join('')}
         </body>
       </html>
