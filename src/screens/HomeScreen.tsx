@@ -55,24 +55,37 @@ const HomeScreen = () => {
     );
 
     useEffect(() => {
-        initStorage();
+        initStorage().catch(err => console.error("Failed to initialize storage:", err));
     }, []);
 
     const handleScan = async () => {
         try {
             if (Platform.OS === 'android') {
-                const granted = await PermissionsAndroid.request(
+                const permissions = [
                     PermissionsAndroid.PERMISSIONS.CAMERA,
-                    {
-                        title: "Camera Permission",
-                        message: "App needs camera access to scan documents.",
-                        buttonNeutral: "Ask Me Later",
-                        buttonNegative: "Cancel",
-                        buttonPositive: "OK"
-                    }
-                );
-                if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+                ];
+
+                if (Platform.Version >= 33) {
+                    permissions.push(PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES);
+                } else {
+                    permissions.push(PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE);
+                    permissions.push(PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE);
+                }
+
+                const granted = await PermissionsAndroid.requestMultiple(permissions);
+
+                const cameraGranted = granted[PermissionsAndroid.PERMISSIONS.CAMERA] === PermissionsAndroid.RESULTS.GRANTED;
+                const storageGranted = Platform.Version >= 33
+                    ? granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] === PermissionsAndroid.RESULTS.GRANTED
+                    : (granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED &&
+                        granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] === PermissionsAndroid.RESULTS.GRANTED);
+
+                if (!cameraGranted) {
                     Alert.alert('Permission Denied', 'Camera permission is required to scan documents.');
+                    return;
+                }
+                if (!storageGranted) {
+                    Alert.alert('Permission Denied', 'Storage permission is required to save scanned documents.');
                     return;
                 }
             }
