@@ -36,6 +36,11 @@
     "plugins": [
       "expo-sharing",
       "react-native-document-scanner-plugin"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "e0af78dd-60cc-47f5-bc06-fe1a6db5f92e"
+      }
+    }
   }
 }
