@@ -13,24 +13,30 @@ export const exportToPdf = async (doc: Document) => {
         // Compress and resize image to prevent memory crashes
         const manipResult = await ImageManipulator.manipulateAsync(
           page.uri,
-          [{ resize: { width: 1200 } }], // Resize to a reasonable max width for documents
-          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG }
+          [{ resize: { width: 800 } }], // Resize to a smaller, reasonable max width
+          { compress: 0.7, format: ImageManipulator.SaveFormat.JPEG, base64: true }
         );
 
-        // Using file:// URI directly in HTML is much more memory efficient than Base64
+        // Embed base64 image data directly into the HTML to avoid URI access issues
         pagesHtml.push(`
-          <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; overflow: hidden;">
-            <img src="${manipResult.uri}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+          <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; overflow: hidden;">
+            <img src="data:image/jpeg;base64,${manipResult.base64}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
           </div>
         `);
       } catch (pageError) {
         console.warn('Failed to compress page, using original:', pageError);
-        // Fallback to original image if manipulation fails
-        pagesHtml.push(`
-          <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100vh; overflow: hidden;">
-            <img src="${page.uri}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
-          </div>
-        `);
+
+        // If manipulation fails, try to read the file as base64 as a fallback
+        try {
+          const base64Data = await FileSystem.readAsStringAsync(page.uri, { encoding: FileSystem.EncodingType.Base64 });
+          pagesHtml.push(`
+              <div style="page-break-after: always; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; overflow: hidden;">
+                <img src="data:image/jpeg;base64,${base64Data}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
+              </div>
+            `);
+        } catch (readError) {
+          console.error("Failed fallback base64 read:", readError);
+        }
       }
     }
 
